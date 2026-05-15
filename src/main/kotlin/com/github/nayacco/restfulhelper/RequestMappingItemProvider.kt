@@ -1,6 +1,7 @@
 package com.github.nayacco.restfulhelper
 
 import com.github.nayacco.restfulhelper.model.PopupPath
+import com.github.nayacco.restfulhelper.utils.collapseRepeatedCurlyBrackets
 import com.intellij.ide.util.gotoByName.*
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.psi.codeStyle.NameUtil
@@ -110,7 +111,10 @@ open class RequestMappingItemProvider : ChooseByNameItemProvider {
                     true
                 } else {
                     val (_, path) = name.split(" ", limit = 2)
-                    NameUtil.buildMatcher("*$pattern", NameUtil.MatchingCaseSensitivity.NONE).matches(path)
+                    // Normalize so that {{var}}-style input copied from tools like Postman/Mustache
+                    // matches a single-brace {var} mapping.
+                    val normalizedPattern = pattern.collapseRepeatedCurlyBrackets()
+                    NameUtil.buildMatcher("*$normalizedPattern", NameUtil.MatchingCaseSensitivity.NONE).matches(path)
                 }
             } catch (e: Exception) {
                 false // no matches appears valid result for "bad" pattern
