@@ -19,6 +19,21 @@ class PopupPath(popupItem: String) {
     // 목록에 없는 Method는 관례 순서 뒤에 오도록 목록 크기를 순위로 쓴다.
     private val methodRank = METHOD_ORDER.indexOf(method).let { if (it < 0) METHOD_ORDER.size else it }
 
+    /** 검색어에 대한 매칭 단계. 선언 순서가 곧 정렬 순서다. */
+    private enum class MatchTier { EXACT, PREFIX, SUBSTRING, FUZZY }
+
+    private fun matchTier(normalizedPattern: String): MatchTier {
+        val normalizedPath = normalize(path)
+        return when {
+            normalizedPath == normalizedPattern -> MatchTier.EXACT
+            normalizedPath.startsWith(normalizedPattern) -> MatchTier.PREFIX
+            normalizedPath.contains(normalizedPattern) -> MatchTier.SUBSTRING
+            else -> MatchTier.FUZZY
+        }
+    }
+
+    private class SortKey(val name: String, val popupPath: PopupPath, val tier: MatchTier)
+
     companion object {
         private val METHOD_ORDER = listOf("GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS")
 
@@ -28,12 +43,20 @@ class PopupPath(popupItem: String) {
             .thenBy { it.method }
             .thenBy { it.methodToken.startsWith('{') }
 
+        private val sortKeyComparator: Comparator<SortKey> = compareBy<SortKey> { it.tier }
+            .thenBy(comparator) { it.popupPath }
+
+        // "users"와 "/Users"를 같은 입력으로 보기 위해 대소문자와 선행 '/'를 무시한다.
+        private fun normalize(value: String): String = value.lowercase().removePrefix("/")
+
         /**
-         * 검색 결과 이름을 URL 경로명 → HTTP Method 순으로 정렬한다.
+         * 검색 결과 이름을 매칭 정확도 → URL 경로명 → HTTP Method 순으로 정렬한다.
          */
-        fun sortNames(names: List<String>, pattern: String): List<String> =
-            names.map { it to PopupPath(it) }
-                .sortedWith(compareBy(comparator) { it.second })
-                .map { it.first }
+        fun sortNames(names: List<String>, pattern: String): List<String> {
+            val normalizedPattern = normalize(pattern)
+            return names.map { name -> PopupPath(name).let { SortKey(name, it, it.matchTier(normalizedPattern)) } }
+                .sortedWith(sortKeyComparator)
+                .map { it.name }
+        }
     }
 }
