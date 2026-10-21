@@ -26,6 +26,7 @@ class PopupPath(popupItem: String) {
             .thenBy { it.path }
             .thenBy { it.methodRank }
             .thenBy { it.method }
+            .thenBy { it.methodToken.startsWith('{') }
 
         /**
          * 검색 결과 이름을 URL 경로명 → HTTP Method 순으로 정렬한다.
