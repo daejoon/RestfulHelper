@@ -34,4 +34,13 @@ class PopupPathTest {
             sorted,
         )
     }
+
+    @Test
+    fun `sortNames - parses path and first method of multi-method names`() {
+        val names = listOf("{DELETE, GET} /c", "POST /b", "PUT /a", "{POST, GET} /a")
+
+        val sorted = PopupPath.sortNames(names, "")
+
+        assertEquals(listOf("{POST, GET} /a", "PUT /a", "POST /b", "{DELETE, GET} /c"), sorted)
+    }
 }
