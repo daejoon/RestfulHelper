@@ -14,6 +14,7 @@ class PopupPath(popupItem: String) {
 
     companion object {
         private val comparator: Comparator<PopupPath> = compareBy<PopupPath, String>(String.CASE_INSENSITIVE_ORDER) { it.path }
+            .thenBy { it.path }
             .thenBy { it.method }
 
         /**
