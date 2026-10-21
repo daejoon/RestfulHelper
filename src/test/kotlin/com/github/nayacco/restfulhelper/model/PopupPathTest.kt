@@ -43,4 +43,13 @@ class PopupPathTest {
 
         assertEquals(listOf("{POST, GET} /a", "PUT /a", "POST /b", "{DELETE, GET} /c"), sorted)
     }
+
+    @Test
+    fun `sortNames - places single method before multi-method with same first method`() {
+        val names = listOf("{GET, POST} /a", "GET /a")
+
+        val sorted = PopupPath.sortNames(names, "")
+
+        assertEquals(listOf("GET /a", "{GET, POST} /a"), sorted)
+    }
 }
