@@ -62,15 +62,13 @@ class PopupPath(popupItem: String) {
         fun sortNames(names: List<String>, pattern: String): List<String> {
             val normalizedPattern = normalize(pattern)
             // 빈 검색어나 "/"는 모든 경로와 일치하므로 정확도 없이 경로명 → Method 순으로만 정렬한다.
-            if (normalizedPattern.isEmpty()) {
-                return names.map { name -> SortKey(name, PopupPath(name), MatchTier.EXACT, 0) }
-                    .sortedWith(sortKeyComparator)
-                    .map { it.name }
-            }
+            val ignoreAccuracy = normalizedPattern.isEmpty()
             // RequestMappingItemProvider.matches()와 같은 matcher로 점수를 매긴다.
-            val matcher = NameUtil.buildMatcher("*$pattern", NameUtil.MatchingCaseSensitivity.NONE)
+            val matcher = if (ignoreAccuracy) null else NameUtil.buildMatcher("*$pattern", NameUtil.MatchingCaseSensitivity.NONE)
             return names.map { name ->
-                PopupPath(name).let { SortKey(name, it, it.matchTier(normalizedPattern), it.matchingDegree(matcher)) }
+                val popupPath = PopupPath(name)
+                if (matcher == null) SortKey(name, popupPath, MatchTier.EXACT, 0)
+                else SortKey(name, popupPath, popupPath.matchTier(normalizedPattern), popupPath.matchingDegree(matcher))
             }
                 .sortedWith(sortKeyComparator)
                 .map { it.name }
