@@ -61,4 +61,14 @@ class PopupPathTest {
         assertEquals(expected, PopupPath.sortNames(names, "users"))
         assertEquals(expected, PopupPath.sortNames(names, "/USERS"))
     }
+
+    @Test
+    fun `sortNames - orders same match tier by higher matching degree first`() {
+        // 둘 다 부분 일치지만 "/z/user"는 단어 시작에서 일치해 "/xuser"보다 점수가 높다.
+        val names = listOf("GET /xuser", "GET /z/user")
+
+        val sorted = PopupPath.sortNames(names, "user")
+
+        assertEquals(listOf("GET /z/user", "GET /xuser"), sorted)
+    }
 }
