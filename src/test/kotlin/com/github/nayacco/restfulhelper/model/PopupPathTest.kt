@@ -52,4 +52,13 @@ class PopupPathTest {
 
         assertEquals(listOf("GET /a", "{GET, POST} /a"), sorted)
     }
+
+    @Test
+    fun `sortNames - orders by match tier exact, prefix, substring, fuzzy ignoring case and leading slash`() {
+        val names = listOf("GET /a/u-s-ers", "GET /admin/users", "GET /users/{id}", "POST /Users")
+        val expected = listOf("POST /Users", "GET /users/{id}", "GET /admin/users", "GET /a/u-s-ers")
+
+        assertEquals(expected, PopupPath.sortNames(names, "users"))
+        assertEquals(expected, PopupPath.sortNames(names, "/USERS"))
+    }
 }
