@@ -1,5 +1,6 @@
 package com.github.nayacco.restfulhelper.model
 
+import com.github.nayacco.restfulhelper.utils.collapseRepeatedCurlyBrackets
 import com.intellij.psi.codeStyle.MinusculeMatcher
 import com.intellij.psi.codeStyle.NameUtil
 
@@ -60,11 +61,13 @@ class PopupPath(popupItem: String) {
          * 검색 결과 이름을 매칭 정확도 → URL 경로명 → HTTP Method 순으로 정렬한다.
          */
         fun sortNames(names: List<String>, pattern: String): List<String> {
-            val normalizedPattern = normalize(pattern)
+            // matches()와 같이 {{var}} 입력을 {var}로 맞춘 뒤 판정한다.
+            val collapsedPattern = pattern.collapseRepeatedCurlyBrackets()
+            val normalizedPattern = normalize(collapsedPattern)
             // 빈 검색어나 "/"는 모든 경로와 일치하므로 정확도 없이 경로명 → Method 순으로만 정렬한다.
             val ignoreAccuracy = normalizedPattern.isEmpty()
             // RequestMappingItemProvider.matches()와 같은 matcher로 점수를 매긴다.
-            val matcher = if (ignoreAccuracy) null else NameUtil.buildMatcher("*$pattern", NameUtil.MatchingCaseSensitivity.NONE)
+            val matcher = if (ignoreAccuracy) null else NameUtil.buildMatcher("*$collapsedPattern", NameUtil.MatchingCaseSensitivity.NONE)
             return names.map { name ->
                 val popupPath = PopupPath(name)
                 if (matcher == null) SortKey(name, popupPath, MatchTier.EXACT, 0)

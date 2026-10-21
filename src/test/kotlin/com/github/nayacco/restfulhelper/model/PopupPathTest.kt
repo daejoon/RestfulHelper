@@ -81,4 +81,13 @@ class PopupPathTest {
         assertEquals(expected, PopupPath.sortNames(names, ""))
         assertEquals(expected, PopupPath.sortNames(names, "/"))
     }
+
+    @Test
+    fun `sortNames - collapses repeated curly brackets in pattern before matching`() {
+        val names = listOf("GET /a/users/{id}", "GET /users/{id}")
+
+        val sorted = PopupPath.sortNames(names, "/users/{{id}}")
+
+        assertEquals(listOf("GET /users/{id}", "GET /a/users/{id}"), sorted)
+    }
 }
