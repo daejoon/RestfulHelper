@@ -1,23 +1,27 @@
 package com.github.nayacco.restfulhelper.model
 
 /**
+ * 검색 팝업 항목 이름(`RequestMappingItem.getName`)을 정렬용으로 해석한다.
+ *
  * format: METHOD PATH PARAMS(if presents)
  * example: GET /account/activate params=some
  */
-class PopupPath(popupItem: String) : Comparable<PopupPath> {
-    private val path = popupItem.split(' ')[1]
-    private val method = popupItem.split(' ')[0]
+class PopupPath(popupItem: String) {
+    private val method = popupItem.substringBefore(' ')
 
-    companion object : Comparator<PopupPath> {
-        private val comparator: java.util.Comparator<PopupPath> = Comparator { o1: PopupPath, o2: PopupPath -> o1.method.compareTo(o2.method) }
-            .thenComparing { o1: PopupPath, o2: PopupPath -> o1.path.length.compareTo(o2.path.length) }
+    // params까지 포함해 비교해야 "/a"가 "/a params=x"보다 앞에 온다.
+    private val path = popupItem.substringAfter(' ')
 
-        override fun compare(o1: PopupPath?, o2: PopupPath?): Int {
-            return comparator.compare(o1, o2)
-        }
-    }
+    companion object {
+        private val comparator: Comparator<PopupPath> = compareBy<PopupPath, String>(String.CASE_INSENSITIVE_ORDER) { it.path }
+            .thenBy { it.method }
 
-    override fun compareTo(other: PopupPath): Int {
-        return compare(this, other)
+        /**
+         * 검색 결과 이름을 URL 경로명 → HTTP Method 순으로 정렬한다.
+         */
+        fun sortNames(names: List<String>, pattern: String): List<String> =
+            names.map { it to PopupPath(it) }
+                .sortedWith(compareBy(comparator) { it.second })
+                .map { it.first }
     }
 }
