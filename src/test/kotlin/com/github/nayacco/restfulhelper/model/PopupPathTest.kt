@@ -90,4 +90,13 @@ class PopupPathTest {
 
         assertEquals(listOf("GET /users/{id}", "GET /a/users/{id}"), sorted)
     }
+
+    @Test
+    fun `sortNames - keeps sorting names without space or closing bracket without exception`() {
+        val names = listOf("{GET", "GET", "GET /a")
+
+        val sorted = PopupPath.sortNames(names, "a")
+
+        assertEquals(listOf("GET /a", "GET", "{GET"), sorted)
+    }
 }
