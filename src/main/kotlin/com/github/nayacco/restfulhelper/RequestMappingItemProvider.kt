@@ -65,10 +65,8 @@ open class RequestMappingItemProvider : ChooseByNameItemProvider {
                 )
             }
 
-            namesList.sortWith(compareBy { PopupPath(it) })
-
             indicator.checkCanceled()
-            return namesList
+            return PopupPath.sortNames(namesList, pattern)
         }
 
         private fun processByNames(
