@@ -71,4 +71,14 @@ class PopupPathTest {
 
         assertEquals(listOf("GET /z/user", "GET /xuser"), sorted)
     }
+
+    @Test
+    fun `sortNames - ignores match accuracy for empty or slash-only pattern`() {
+        // "-a/"는 '/'가 맨 앞이 아니어서 '/' 검색어 매칭 점수가 "/z"보다 낮지만, 경로명 순으로는 앞이다.
+        val names = listOf("GET /z", "GET -a/", "GET /b")
+        val expected = listOf("GET -a/", "GET /b", "GET /z")
+
+        assertEquals(expected, PopupPath.sortNames(names, ""))
+        assertEquals(expected, PopupPath.sortNames(names, "/"))
+    }
 }
