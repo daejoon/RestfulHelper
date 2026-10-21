@@ -13,4 +13,13 @@ class PopupPathTest {
 
         assertEquals(listOf("GET /a", "GET /a params=x", "POST /Accounts", "DELETE /orders", "GET /users"), sorted)
     }
+
+    @Test
+    fun `sortNames - breaks case-insensitive path ties by case-sensitive comparison`() {
+        val names = listOf("GET /users", "GET /Users")
+
+        val sorted = PopupPath.sortNames(names, "")
+
+        assertEquals(listOf("GET /Users", "GET /users"), sorted)
+    }
 }
