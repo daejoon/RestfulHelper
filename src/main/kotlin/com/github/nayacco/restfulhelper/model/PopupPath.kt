@@ -1,5 +1,8 @@
 package com.github.nayacco.restfulhelper.model
 
+import com.intellij.psi.codeStyle.MinusculeMatcher
+import com.intellij.psi.codeStyle.NameUtil
+
 /**
  * 검색 팝업 항목 이름(`RequestMappingItem.getName`)을 정렬용으로 해석한다.
  *
@@ -32,7 +35,10 @@ class PopupPath(popupItem: String) {
         }
     }
 
-    private class SortKey(val name: String, val popupPath: PopupPath, val tier: MatchTier)
+    // 점수 계산 실패가 탐색을 멈추지 않도록 최저 점수로 대신한다.
+    private fun matchingDegree(matcher: MinusculeMatcher): Int = runCatching { matcher.matchingDegree(path) }.getOrDefault(0)
+
+    private class SortKey(val name: String, val popupPath: PopupPath, val tier: MatchTier, val degree: Int)
 
     companion object {
         private val METHOD_ORDER = listOf("GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS")
@@ -44,6 +50,7 @@ class PopupPath(popupItem: String) {
             .thenBy { it.methodToken.startsWith('{') }
 
         private val sortKeyComparator: Comparator<SortKey> = compareBy<SortKey> { it.tier }
+            .thenByDescending { it.degree }
             .thenBy(comparator) { it.popupPath }
 
         // "users"와 "/Users"를 같은 입력으로 보기 위해 대소문자와 선행 '/'를 무시한다.
@@ -54,7 +61,11 @@ class PopupPath(popupItem: String) {
          */
         fun sortNames(names: List<String>, pattern: String): List<String> {
             val normalizedPattern = normalize(pattern)
-            return names.map { name -> PopupPath(name).let { SortKey(name, it, it.matchTier(normalizedPattern)) } }
+            // RequestMappingItemProvider.matches()와 같은 matcher로 점수를 매긴다.
+            val matcher = NameUtil.buildMatcher("*$pattern", NameUtil.MatchingCaseSensitivity.NONE)
+            return names.map { name ->
+                PopupPath(name).let { SortKey(name, it, it.matchTier(normalizedPattern), it.matchingDegree(matcher)) }
+            }
                 .sortedWith(sortKeyComparator)
                 .map { it.name }
         }
