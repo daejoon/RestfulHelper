@@ -66,7 +66,7 @@ open class RequestMappingItemProvider : ChooseByNameItemProvider {
             }
 
             indicator.checkCanceled()
-            return PopupPath.sortNames(namesList, pattern)
+            return PopupPath.sortNames(namesList, pattern, indicator::checkCanceled)
         }
 
         private fun processByNames(

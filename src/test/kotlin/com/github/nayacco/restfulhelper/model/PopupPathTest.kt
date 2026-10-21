@@ -99,4 +99,13 @@ class PopupPathTest {
 
         assertEquals(listOf("GET /a", "GET", "{GET"), sorted)
     }
+
+    @Test
+    fun `sortNames - checks cancellation for each name while building sort keys`() {
+        var checks = 0
+
+        PopupPath.sortNames(listOf("GET /a", "GET /b", "GET /c"), "a") { checks++ }
+
+        assertEquals(3, checks)
+    }
 }
