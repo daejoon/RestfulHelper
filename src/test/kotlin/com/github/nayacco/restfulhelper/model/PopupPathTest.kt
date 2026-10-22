@@ -73,6 +73,16 @@ class PopupPathTest {
     }
 
     @Test
+    fun `sortNames - prefers match starting at path start over higher matching degree in same tier`() {
+        // 둘 다 퍼지 일치다. 기본 점수는 "/a/userId"가 더 높지만, "/user/{id}"는 경로 맨 앞부터 일치한다.
+        val names = listOf("GET /a/userId", "GET /user/{id}")
+        val expected = listOf("GET /user/{id}", "GET /a/userId")
+
+        assertEquals(expected, PopupPath.sortNames(names, "uid"))
+        assertEquals(expected, PopupPath.sortNames(names, "/uid"))
+    }
+
+    @Test
     fun `sortNames - ignores match accuracy for empty or slash-only pattern`() {
         // "-a/"는 '/'가 맨 앞이 아니어서 '/' 검색어 매칭 점수가 "/z"보다 낮지만, 경로명 순으로는 앞이다.
         val names = listOf("GET /z", "GET -a/", "GET /b")
