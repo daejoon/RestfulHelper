@@ -37,7 +37,8 @@ class PopupPath(popupItem: String) {
     }
 
     // 점수 계산 실패가 탐색을 멈추지 않도록 최저 점수로 대신한다.
-    private fun matchingDegree(matcher: MinusculeMatcher): Int = runCatching { matcher.matchingDegree(path) }.getOrDefault(0)
+    // 경로는 항상 '/'로 시작하므로 이를 떼어야 경로 맨 앞부터의 일치를 start match로 인정받는다.
+    private fun matchingDegree(matcher: MinusculeMatcher): Int = runCatching { matcher.matchingDegree(path.removePrefix("/")) }.getOrDefault(0)
 
     private class SortKey(val name: String, val popupPath: PopupPath, val tier: MatchTier, val degree: Int)
 
@@ -66,8 +67,11 @@ class PopupPath(popupItem: String) {
             val normalizedPattern = normalize(collapsedPattern)
             // 빈 검색어나 "/"는 모든 경로와 일치하므로 정확도 없이 경로명 → Method 순으로만 정렬한다.
             val ignoreAccuracy = normalizedPattern.isEmpty()
-            // RequestMappingItemProvider.matches()와 같은 matcher로 점수를 매긴다.
-            val matcher = if (ignoreAccuracy) null else NameUtil.buildMatcher("*$collapsedPattern", NameUtil.MatchingCaseSensitivity.NONE)
+            // IntelliJ Go To File처럼 경로 맨 앞부터 일치하면 큰 가산점(start match)을 준다. 경로와 맞춰 검색어의 선행 '/'도 뗀다.
+            val matcher = if (ignoreAccuracy) null else NameUtil.buildMatcher("*" + collapsedPattern.removePrefix("/"))
+                .withCaseSensitivity(NameUtil.MatchingCaseSensitivity.NONE)
+                .preferringStartMatches()
+                .build()
             return names.map { name ->
                 checkCanceled()
                 val popupPath = PopupPath(name)
